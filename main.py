@@ -1,5 +1,6 @@
 import bs4
 import requests
+import re
 
 from dataclasses import dataclass, field
 from typing import List
@@ -10,6 +11,7 @@ class CSFDObject:
     type: str
     url: str
     name: str
+    year: int
     genre: List[str] = field(default_factory=list)
     rating: int = 0
 
@@ -20,6 +22,7 @@ class CSFDObject:
             self.type == other.type
             and self.url == other.url
             and self.name == other.name
+            and self.year == other.year
             and self.genre == other.genre  # Compare lists directly
             and self.rating == other.rating
         )
@@ -27,7 +30,7 @@ class CSFDObject:
     def __hash__(self):
         # Convert mutable list to tuple to make it hashable
         genre_tuple = tuple(self.genre)
-        return hash((self.type, self.url, self.name, genre_tuple, self.rating))
+        return hash((self.type, self.url, self.name, self.year, genre_tuple, self.rating))
 
 
 INTERESTED_SECTIONS = ["Nejnavštěvovanější seriály", "Nejnavštěvovanější filmy"]
@@ -63,7 +66,6 @@ def extract_type(html_page: bs4) -> str:
         return "tvshow"
     except AttributeError:
         return "movie"
-
 
 def extract_us_title(html_page: bs4) -> str:
     """Extract US title from an item's page."""
@@ -107,7 +109,16 @@ def extract_rating(html_page: bs4) -> int:
         )
     except ValueError:
         return 0
-
+    
+def extract_year(html_page: bs4, type: str) -> int:
+    year = html_page.find("div", {"class": "origin"}).find("span").get_text(strip=True).replace(",", "")
+    if type == "tvshow":
+        # select only the beginning year
+        year = re.compile(r'\b(\d{4})\b').search(year).group(1)
+    try:
+        return int(year)
+    except ValueError:
+        return 0
 
 def main():
     main_page = fetch_page(BASE_URL, HEADERS)
@@ -120,6 +131,7 @@ def main():
         item_type = extract_type(item_html)
         item_us_title = extract_us_title(item_html)
         item_genre = extract_genre(item_html)
+        item_year = extract_year(item_html, item_type)
         item_rating = extract_rating(item_html)
         if item_us_title is not None:
             csfd_objects.add(
@@ -127,6 +139,7 @@ def main():
                     type=item_type,
                     url=item_url,
                     name=item_us_title,
+                    year=item_year,
                     genre=item_genre,
                     rating=item_rating,
                 )
@@ -134,6 +147,7 @@ def main():
         else:
             print(f"'{item_url}' has not us title.")
     print("The most visited URLs scraped.")
+    print(csfd_objects)
 
 
 if __name__ == "__main__":
