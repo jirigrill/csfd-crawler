@@ -16,17 +16,19 @@ class CSFDObject:
     def __eq__(self, other):
         if not isinstance(other, CSFDObject):
             return False
-        return (self.type == other.type and
-                self.url == other.url and
-                self.name == other.name and
-                self.genre == other.genre and  # Compare lists directly
-                self.rating == other.rating)
+        return (
+            self.type == other.type
+            and self.url == other.url
+            and self.name == other.name
+            and self.genre == other.genre  # Compare lists directly
+            and self.rating == other.rating
+        )
 
     def __hash__(self):
         # Convert mutable list to tuple to make it hashable
         genre_tuple = tuple(self.genre)
         return hash((self.type, self.url, self.name, genre_tuple, self.rating))
-    
+
 
 INTERESTED_SECTIONS = ["Nejnavštěvovanější seriály", "Nejnavštěvovanější filmy"]
 BASE_URL = "https://www.csfd.cz"
@@ -59,7 +61,7 @@ def extract_type(html_page: bs4) -> str:
             "span", {"class": "type"}
         ).get_text(strip=True)
         return "tvshow"
-    except:
+    except AttributeError:
         return "movie"
 
 
@@ -90,20 +92,20 @@ def extract_genre(html_page: bs4) -> str:
     genres = html_page.find("div", {"class": "genres"})
     genres_list = []
     for genre in genres:
-        genre = genre.get_text(strip=True).replace("/","").replace(" ", "")
+        genre = genre.get_text(strip=True).replace("/", "").replace(" ", "")
         if genre != "":
             genres_list.append(genre)
     return genres_list
 
 
-def extract_rating(html_page: bs4) -> str:
+def extract_rating(html_page: bs4) -> int:
     try:
         return int(
             html_page.find("div", {"class": "film-rating-average"})
             .get_text(strip=True)
             .replace("%", "")
         )
-    except:
+    except ValueError:
         return 0
 
 
