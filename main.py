@@ -14,7 +14,15 @@ def main() -> None:
     INTERESTED_SECTIONS = ["Nejnavštěvovanější seriály", "Nejnavštěvovanější filmy"]
 
     scraper = CSFDScraper(BASE_URL, HEADERS, INTERESTED_SECTIONS)
-    scraper.scrape()
+    results = scraper.scrape()
+
+    for item in results:
+        print(f"Title: {item.name}")
+        print(f"Type: {item.type}")
+        print(f"Year: {item.year}")
+        print(f"Genres: {', '.join(item.genre)}")
+        print(f"Rating: {item.rating}%")
+        print("---")
 
 
 if __name__ == "__main__":
