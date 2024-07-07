@@ -7,8 +7,11 @@ from .csfd_object import CSFDObject
 from .csfd_main_page_processor import CSFDMainPageProcessor
 from .csfd_item_parser import CSFDItemParser
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 class WebScraper:
     def __init__(self, base_url: str, headers: dict):
@@ -16,14 +19,20 @@ class WebScraper:
         self.headers = headers
 
     def _fetch_page(self, url: str) -> Optional[BeautifulSoup]:
-        """Fetch the page content from a given URL."""
+        """
+        Fetch the page content from a given URL.
+
+        :param url(str): The URL of the page to fetch.
+        :return page_content(Optional[BeautifulSoup]): The parsed HTML content of the page, or None if the fetch failed.
+        """
         try:
             response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
             return BeautifulSoup(response.text, features="html.parser")
         except requests.RequestException as e:
             logger.error("Failed to fetch page %s: %s", url, e)
-            return None
+            raise
+
 
 class CSFDScraper(WebScraper):
     def __init__(self, base_url: str, headers: dict, interested_sections: List[str]):
@@ -31,6 +40,12 @@ class CSFDScraper(WebScraper):
         self.page_processor = CSFDMainPageProcessor(interested_sections)
 
     def scrape(self) -> Set[CSFDObject]:
+        """
+        Scrape CSFD website for top items in interested sections.
+
+        :param None
+        :return csfd_objects(Set[CSFDObject]): A set of CSFDObjects containing information about the scraped items.
+        """
         main_page = self._fetch_page(self.base_url)
         if not main_page:
             logger.error("Failed to fetch main page. Exiting.")

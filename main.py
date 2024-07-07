@@ -3,9 +3,11 @@ import requests
 import re
 import logging
 
-from src.web_scrapper import CSFDScraper
+from src.web_scraper import CSFDScraper
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -15,7 +17,7 @@ def main() -> None:
     INTERESTED_SECTIONS = ["Nejnavštěvovanější seriály", "Nejnavštěvovanější filmy"]
 
     scraper = CSFDScraper(BASE_URL, HEADERS, INTERESTED_SECTIONS)
-    scraper.scrape()
+    scraped_objects = scraper.scrape()
 
 
 if __name__ == "__main__":

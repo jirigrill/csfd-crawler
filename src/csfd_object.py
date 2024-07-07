@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
+
 @dataclass
 class CSFDObject:
     type: str
@@ -8,7 +9,6 @@ class CSFDObject:
     name: str
     year: int
     genre: List[str] = field(default_factory=list)
-    country: List[str] = field(default_factory=list)
     rating: int = 0
 
     def __eq__(self, other):
@@ -20,14 +20,12 @@ class CSFDObject:
             and self.name == other.name
             and self.year == other.year
             and self.genre == other.genre
-            and self.country == other.country
             and self.rating == other.rating
         )
 
     def __hash__(self):
         # Convert mutable list to tuple to make it hashable
         genre_tuple = tuple(self.genre)
-        genre_country = tuple(self.country)
         return hash(
             (
                 self.type,
@@ -35,7 +33,6 @@ class CSFDObject:
                 self.name,
                 self.year,
                 genre_tuple,
-                genre_country,
                 self.rating,
             )
         )
