@@ -1,6 +1,3 @@
-import bs4
-import requests
-import re
 import logging
 
 from src.web_scraper import CSFDScraper
@@ -17,7 +14,7 @@ def main() -> None:
     INTERESTED_SECTIONS = ["Nejnavštěvovanější seriály", "Nejnavštěvovanější filmy"]
 
     scraper = CSFDScraper(BASE_URL, HEADERS, INTERESTED_SECTIONS)
-    scraped_objects = scraper.scrape()
+    scraper.scrape()
 
 
 if __name__ == "__main__":
