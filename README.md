@@ -16,14 +16,18 @@ CSFD Scraper is a Python-based web scraping tool designed to extract movie and T
 - Handles pagination to retrieve multiple pages of results
 - Robust error handling and logging
 - Configurable to focus on specific sections of the CSFD website
+- Docker support for easy deployment and execution
 
 ## Requirements
 
-- Python 3.12.4+
+- Python 3.12+
 - BeautifulSoup4
 - Requests
+- Docker (optional, for containerized execution)
 
 ## Installation
+
+### Local Installation
 
 1. Clone this repository:
    ```
@@ -36,28 +40,40 @@ CSFD Scraper is a Python-based web scraping tool designed to extract movie and T
    pip install -r requirements.txt
    ```
 
+### Docker Installation
+
+1. Ensure you have Docker installed on your system.
+2. Clone this repository:
+   ```
+   git clone https://github.com/yourusername/csfd-scraper.git
+   cd csfd-scraper
+   ```
+
 ## Usage
 
-To use the CSFD Scraper, run the main script:
+### Local Usage
+
+To use the CSFD Scraper locally, run the main script:
 
 ```python
-from src.csfd_scraper import CSFDScraper
-
-BASE_URL = "https://www.csfd.cz"
-HEADERS = {"User-Agent": "Your User Agent String"}
-INTERESTED_SECTIONS = ["Nejnavštěvovanější seriály", "Nejnavštěvovanější filmy"]
-
-scraper = CSFDScraper(BASE_URL, HEADERS, INTERESTED_SECTIONS)
-results = scraper.scrape()
-
-for item in results:
-    print(f"Title: {item.name}")
-    print(f"Type: {item.type}")
-    print(f"Year: {item.year}")
-    print(f"Genres: {', '.join(item.genre)}")
-    print(f"Rating: {item.rating}%")
-    print("---")
+python main.py
 ```
+
+### Docker Usage
+
+To use the CSFD Scraper with Docker:
+
+1. Build the Docker image:
+   ```
+   docker build -t csfd-scraper .
+   ```
+
+2. Run the Docker container:
+   ```
+   docker run csfd-scraper
+   ```
+
+This will execute the scraper inside a Docker container and output the results.
 
 ## Configuration
 
@@ -70,6 +86,19 @@ To run the unit tests:
 ```
 pytest tests/
 ```
+
+## Docker
+
+The project includes a Dockerfile for easy containerization. The Dockerfile:
+
+- Uses Python 3.12 slim image as the base
+- Sets up the necessary environment variables
+- Installs system and Python dependencies
+- Copies the application code into the container
+- Creates a non-root user for enhanced security
+- Specifies the command to run the scraper
+
+To build and run the Docker image, follow the Docker Usage instructions in the Usage section above.
 
 ## Contributing
 
