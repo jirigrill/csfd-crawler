@@ -1,5 +1,5 @@
 import logging
-
+from src.config import Config
 from src.web_scraper import CSFDScraper
 
 logging.basicConfig(
@@ -9,11 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    BASE_URL = "https://www.csfd.cz"
-    HEADERS = {"User-agent": "csfd crawler"}
-    INTERESTED_SECTIONS = ["Nejnavštěvovanější seriály", "Nejnavštěvovanější filmy"]
-
-    scraper = CSFDScraper(BASE_URL, HEADERS, INTERESTED_SECTIONS)
+    scraper = CSFDScraper(Config.BASE_URL, Config.HEADERS, Config.INTERESTED_SECTIONS)
     results = scraper.scrape()
 
     for item in results:

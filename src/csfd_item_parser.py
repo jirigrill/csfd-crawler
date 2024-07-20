@@ -18,20 +18,24 @@ class CSFDItemParser:
         self.url = url
 
     def parse_item(self) -> Optional[CSFDObject]:
-        item_type = self._extract_type()
-        item_us_title = self._extract_us_title()
-        if not item_us_title:
-            logger.warning("'%s' has no US title.", self.url)
-            return None
+        try:
+            item_type = self._extract_type()
+            item_name = self._extract_us_title()
+            if not item_name:
+                logger.warning(f"'{self.url}' has no title.")
+                return None
 
-        return CSFDObject(
-            type=item_type,
-            url=self.url,
-            name=item_us_title,
-            year=self._extract_year(item_type),
-            genre=self._extract_genre(),
-            rating=self._extract_rating(),
-        )
+            return CSFDObject(
+                type=item_type,
+                url=self.url,
+                name=item_name,
+                year=self._extract_year(item_type),
+                genre=self._extract_genre(),
+                rating=self._extract_rating(),
+            )
+        except Exception as e:
+            logger.error(f"Failed to parse item {self.url}: {str(e)}")
+            return None
 
     def _extract_type(self) -> str:
         """
@@ -40,10 +44,14 @@ class CSFDItemParser:
         :param None
         :return item_type(str): The type of the item ('tvshow' or 'movie').
         """
-        type_span = self.html_page.find("div", {"class": "film-header-name"})
-        if type_span and type_span.find("span", {"class": "type"}):
-            return "tvshow"
-        return "movie"
+        try:
+            type_span = self.html_page.find("div", {"class": "film-header-name"})
+            if type_span and type_span.find("span", {"class": "type"}):
+                return "tvshow"
+            return "movie"
+        except Exception as e:
+            logger.warning(f"Failed to extract type for {self.url}: {str(e)}")
+            return "movie"
 
     def _extract_us_title(self) -> Optional[str]:
         """
@@ -52,20 +60,28 @@ class CSFDItemParser:
         :param None
         :return us_title(Optional[str]): The US title of the item, or None if not found.
         """
-        titles = self.html_page.find("ul", {"class": "film-names"})
-        if titles:
-            for title in titles.find_all("li"):
-                us_flag = title.find("img", {"title": "USA"})
-                if us_flag and not us_flag.parent.find("span", class_="info"):
-                    return (
-                        us_flag.parent.get_text(strip=True)
-                        .replace("(více)", "")
-                        .replace("(méně)", "")
-                    )
-        else:
+        try:
+            titles = self.html_page.find("ul", {"class": "film-names"})
+            if titles:
+                for title in titles.find_all("li"):
+                    us_flag = title.find("img", {"title": "USA"})
+                    if us_flag and not us_flag.parent.find("span", class_="info"):
+                        return (
+                            us_flag.parent.get_text(strip=True)
+                            .replace("(více)", "")
+                            .replace("(méně)", "")
+                        )
+                # If no US title found, return the first available title
+                first_title = titles.find("li")
+                if first_title:
+                    return first_title.get_text(strip=True)
+            
+            # Fallback to main title if no titles found in film-names
             title_div = self.html_page.find("div", {"class": "film-header-name"})
             if title_div and title_div.h1:
                 return title_div.h1.get_text(strip=True)
+        except Exception as e:
+            logger.warning(f"Failed to extract name for {self.url}: {str(e)}")
         return None
 
     def _extract_genre(self) -> List[str]:
@@ -75,12 +91,14 @@ class CSFDItemParser:
         :param None
         :return genres(List[str]): A list of genres for the item.
         """
-        genres_div = self.html_page.find("div", {"class": "genres"})
-        if genres_div:
-            # Split by '/' and strip whitespace from each genre
-            return [
-                genre.strip() for genre in genres_div.get_text(strip=True).split("/")
-            ]
+        try:
+            genres_div = self.html_page.find("div", {"class": "genres"})
+            if genres_div:
+                return [
+                    genre.strip() for genre in genres_div.get_text(strip=True).split("/")
+                ]
+        except Exception as e:
+            logger.warning(f"Failed to extract genre for {self.url}: {str(e)}")
         return []
 
     def _extract_rating(self) -> int:
@@ -90,12 +108,12 @@ class CSFDItemParser:
         :param None
         :return rating(int): The rating of the item as an integer percentage.
         """
-        rating_div = self.html_page.find("div", {"class": "film-rating-average"})
-        if rating_div:
-            try:
+        try:
+            rating_div = self.html_page.find("div", {"class": "film-rating-average"})
+            if rating_div:
                 return int(rating_div.get_text(strip=True).replace("%", ""))
-            except ValueError:
-                logger.warning("Failed to parse rating")
+        except (ValueError, AttributeError) as e:
+            logger.warning(f"Failed to parse rating for {self.url}: {str(e)}")
         return 0
 
     def _extract_year(self, item_type: str) -> int:
@@ -115,6 +133,6 @@ class CSFDItemParser:
             else:
                 try:
                     return int(year_text)
-                except ValueError:
-                    logger.warning("Failed to parse year: %s", year_text)
+                except (ValueError, AttributeError) as e:
+                    logger.warning(f"Failed to parse year for {self.url}: {str(e)}")
         return 0
